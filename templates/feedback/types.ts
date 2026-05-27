@@ -6,6 +6,10 @@
  * server code in any consumer project.
  */
 
+import type { ElementSummary, FocusSnapshot } from "./focus";
+
+export type { ElementSummary, FocusSnapshot };
+
 export type FeedbackSeverity = "nice" | "bug" | "blocker";
 export type FeedbackStatus = "open" | "triaged" | "fixed" | "wontfix";
 
@@ -19,6 +23,10 @@ export interface FeedbackSubmission {
   pagePath: string;
   pageQuery?: string;
   pageContext?: FeedbackPageContext;
+  /** Passive focus signals captured at modal-open time. */
+  focus?: FocusSnapshot;
+  /** Explicit elements the user "Point at it"-pinned, in click order. */
+  pointers?: ElementSummary[];
 }
 
 /** A persisted row, shape returned to the admin dashboard. */
@@ -33,6 +41,8 @@ export interface FeedbackRow {
   pageContext: FeedbackPageContext;
   comment: string;
   severity: FeedbackSeverity;
+  focus: FocusSnapshot | Record<string, never>;
+  pointers: ElementSummary[];
   status: FeedbackStatus;
   resolvedAt: string | null;
   resolvedBy: string | null;
