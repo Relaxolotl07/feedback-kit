@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Install the Militia feedback widget kit. Two independent, additive modes — safe by default.
+# Install the feedback widget kit. Two independent, additive modes — safe by default.
 #   ./install.sh --global              # copy inert /feedback-widget skill into ~/.claude/skills/
 #   ./install.sh --target <repo>       # copy templates/feedback/ into <repo>/src/feedback/
 #   add --force to overwrite existing files (off by default)

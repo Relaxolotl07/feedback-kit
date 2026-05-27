@@ -1,9 +1,9 @@
 ---
 name: feedback-widget
-description: Install the Militia in-app feedback widget into a Next.js project. Copies a self-contained `feedback/` module (Radix Dialog + Postgres), generates the API route wired with the project's own sql + auth helpers, mounts the floating <FeedbackButton/>, and applies the schema. Use when a project wants non-engineers to send structured feedback (path + page context + comment + severity) from any authed page.
+description: Install the in-app feedback widget into a Next.js project. Copies a self-contained `feedback/` module (Radix Dialog + Postgres), generates the API route wired with the project's own sql + auth helpers, mounts the floating <FeedbackButton/>, and applies the schema. Use when a project wants non-engineers to send structured feedback (path + page context + comment + severity) from any authed page.
 ---
 
-# Install the Militia feedback widget
+# Install the feedback widget
 
 Goal: drop the portable `feedback/` module into a target Next.js (App Router)
 project, wire it to that project's existing `sql` client and auth helper, mount
@@ -20,7 +20,7 @@ so this skill is mostly about *finding the right wires to plug it into*.
   exist, refresh in place rather than replace.
 - **Derive from the actual code.** Don't assume the project uses `@/lib/db` or
   `@/lib/auth/guard` — find the project's real `sql` export and auth helper by
-  searching the codebase. Different Militia projects name them differently.
+  searching the codebase. Naming conventions vary across projects.
 - **Propose, then do.** Present the plan (step 1) and get a nod before writing
   files or applying DDL.
 
@@ -34,7 +34,7 @@ so this skill is mostly about *finding the right wires to plug it into*.
    - The project's **`sql` client**: a tagged-template Postgres client.
      Search likely paths: `src/lib/db.ts`, `src/db/index.ts`, `lib/db.*`,
      anything importing `@neondatabase/serverless`. Capture the exact import
-     path (e.g. `@/lib/db`).
+     path (e.g. `@/lib/db`). Different projects name them differently.
    - The project's **auth helper**: a function that returns
      `{ error, userId, email }` or equivalent for a route handler. Search:
      `requireAuth`, `getSession`, `auth()`, `currentUser`. Capture the exact
@@ -44,8 +44,8 @@ so this skill is mostly about *finding the right wires to plug it into*.
      Look for `app/layout.tsx`, any `AppShell`/`RootShell`/`Providers` client
      component the layout wraps everything in. Prefer mounting in the client
      shell over the server layout so `usePathname` works without adapting.
-   - The **project name** to record on each feedback row (e.g. `"militiahub"`,
-     `"forensic-earnings"`). Default to the repo name.
+   - The **project name** to record on each feedback row (e.g. the repo name).
+     Default to the repo name.
    - Whether a `feedback` table already exists (`\d feedback` or a SQL probe).
 
    Then present a short plan: which files you'll create, the API-route content,
@@ -54,7 +54,7 @@ so this skill is mostly about *finding the right wires to plug it into*.
 
 2. **Copy the module.** Place the kit's `templates/feedback/` into
    `<target>/src/feedback/` (or wherever the project's source root lives — match
-   the existing pattern, e.g. some Militia projects use `src/`, others use bare
+   the existing pattern, e.g. some projects use `src/`, others use bare
    `app/`). Do not modify any file in the module — it's intentionally
    project-agnostic.
 

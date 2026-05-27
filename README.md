@@ -1,12 +1,16 @@
-# Militia Feedback Kit
+# Feedback Kit
 
 A portable in-app feedback widget for Next.js (App Router) projects, packaged
 for one-command install and an optional `/feedback-widget` Claude Code skill.
+Built for the messy reality of one-person side projects, vibe-coded internal
+tools, and prototypes you'd never bother filing GitHub Issues against — but
+where you still want someone non-technical to be able to say "this looks
+weird, here's why" with one click.
 
-Non-engineers click a floating **Feedback** pill → modal pre-fills their path +
-the page's registered structured context → they type a comment and pick a
+Non-engineers click a floating **Feedback** pill → modal pre-fills their path
++ the page's registered structured context → they type a comment and pick a
 severity → row lands in the project's Postgres `feedback` table for the dev
-team to review in the next session.
+team (or future-you) to review.
 
 | Part | What it is | Use it when |
 |------|-----------|-------------|
@@ -108,14 +112,15 @@ meaningful state — path + query are always captured automatically.
 
 ## Origins / staying current
 
-This was distilled from the Militia ORR back-test tool's need to capture
-structured feedback from Sam / Andrew / other non-engineering operators. The
-module here is the canonical source — when a consuming project wants updates,
-re-copy `templates/feedback/` (the skill can do this safely, since the module
-is self-contained). Schema migrations belong in `templates/feedback/schema.sql`
-with `CREATE ... IF NOT EXISTS` so re-runs are idempotent.
+Distilled from a real back-test tool's need to capture structured feedback
+from non-engineering operators (PMs, analysts, ops folk) without dragging
+them into GitHub Issues or a separate tool. The module here is the canonical
+source — when a consuming project wants updates, re-copy `templates/feedback/`
+(the skill can do this safely, since the module is self-contained). Schema
+migrations belong in `templates/feedback/schema.sql` with `CREATE ... IF NOT
+EXISTS` so re-runs are idempotent.
 
-If the widget grows features the README describes as "not shipped" (screenshot
-capture, GitHub Issue mirror, `/admin/feedback` dashboard), they should live in
-this repo and propagate to consumers via re-install — *not* as forks in each
-consumer.
+If the widget grows features the module README describes as "not shipped"
+(screenshot capture, GitHub Issue mirror, `/admin/feedback` dashboard), they
+should live in this repo and propagate to consumers via re-install — *not*
+as forks in each consumer.

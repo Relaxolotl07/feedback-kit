@@ -1,4 +1,4 @@
--- Militia feedback widget — schema.
+-- Feedback widget — schema.
 --
 -- One row per submission. Free-text comment is the only required body field;
 -- everything else is structured context the widget captures automatically.
@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS feedback (
   submitter_sub   text,                                  -- e.g. Google `sub`
 
   -- Where they were
-  project         text NOT NULL,                         -- 'militiahub' | 'militia-capital-hub' | ...
+  project         text NOT NULL,                         -- e.g. 'my-app' | 'admin' | ...
   page_path       text NOT NULL,                         -- e.g. '/backtest'
   page_query      text,                                  -- raw `?from=...&to=...`
   page_context    jsonb NOT NULL DEFAULT '{}'::jsonb,    -- whatever the page registered

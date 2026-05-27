@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-  Install the Militia feedback widget kit. Two independent, additive modes — safe by default.
+  Install the feedback widget kit. Two independent, additive modes — safe by default.
 
 .EXAMPLE
   ./install.ps1 -Global

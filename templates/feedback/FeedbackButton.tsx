@@ -6,8 +6,8 @@
  * `useFeedbackContext()` from "./client").
  *
  * Self-contained UI: uses Radix Dialog + Tailwind only, so this whole module
- * is portable across Militia projects with no dependency on the host app's
- * component library.
+ * is portable across projects with no dependency on the host app's component
+ * library.
  */
 
 import { useEffect, useMemo, useState } from "react";

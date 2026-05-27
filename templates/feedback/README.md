@@ -1,6 +1,6 @@
-# Militia feedback widget
+# Feedback widget
 
-A self-contained, portable feedback collector for any Militia Next.js app.
+A self-contained, portable feedback collector for any Next.js app.
 
 Non-engineers click a floating "Feedback" pill → modal pops up with their
 current path + structured page context pre-filled → they type a comment and
@@ -19,9 +19,8 @@ src/feedback/
 └── README.md           ← you are here
 ```
 
-The module has no project-specific imports. To extract it for another
-Militia repo, copy this directory wholesale and follow the install steps
-below.
+The module has no project-specific imports. To use it in another project,
+copy this directory wholesale and follow the install steps below.
 
 ## Install in a new project (3 steps)
 
@@ -43,7 +42,7 @@ import { createFeedbackPOST } from "@/feedback/server";
 export const POST = createFeedbackPOST({
   sql,
   requireAuth,
-  project: "<this-project>",          // e.g. "militiahub"
+  project: "<this-project>",          // e.g. the repo name
 });
 ```
 

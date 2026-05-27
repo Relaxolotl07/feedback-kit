@@ -1,5 +1,5 @@
 /**
- * Shared types for the Militia feedback widget.
+ * Shared types for the feedback widget.
  *
  * The widget keeps its dependency surface intentionally small: this file has
  * no React, no Next, no DB imports — safe to import from both client and

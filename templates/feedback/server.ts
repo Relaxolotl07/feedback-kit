@@ -3,8 +3,8 @@
  *
  * Designed for portability: each consumer project supplies its own `sql`
  * tagged-template client and its own `requireAuth()` resolver. The module
- * never imports project-specific code, so the same file works in militiahub,
- * militia-capital-hub, forensic-earnings, etc.
+ * never imports project-specific code, so the same file works in any
+ * Next.js + Postgres + session-auth app.
  *
  * Wire it up from `app/api/feedback/route.ts`:
  *
@@ -15,7 +15,7 @@
  *   export const POST = createFeedbackPOST({
  *     sql,
  *     requireAuth,
- *     project: "militiahub",
+ *     project: "my-app",
  *   });
  */
 
