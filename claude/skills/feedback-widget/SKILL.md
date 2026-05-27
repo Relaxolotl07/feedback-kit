@@ -28,9 +28,12 @@ so this skill is mostly about *finding the right wires to plug it into*.
 
 1. **Audit the target project + plan (read-only first).** Determine and report
    back:
-   - Confirm: Next.js App Router (look for `app/` directory, `next.config.*`).
-     Bail out cleanly if Pages Router or non-Next — note the kit doesn't support
-     those yet.
+   - Look for: Next.js App Router (`app/` directory + `next.config.*`).
+     - **If yes:** the kit's `templates/feedback/` drops in verbatim — proceed
+       through the rest of this procedure.
+     - **If no** (Pages Router, Vite + React, plain React, SvelteKit, Remix,
+       any backend without a JS frontend, etc.): don't bail. Switch to the
+       **port path** below.
    - The project's **`sql` client**: a tagged-template Postgres client.
      Search likely paths: `src/lib/db.ts`, `src/db/index.ts`, `lib/db.*`,
      anything importing `@neondatabase/serverless`. Capture the exact import
@@ -116,6 +119,45 @@ so this skill is mostly about *finding the right wires to plug it into*.
 - DDL is applied to the dev DB; production DDL handoff is queued.
 - `tsc --noEmit` is clean.
 
+## Port path (project isn't Next.js App Router)
+
+The widget's *design* is portable — only the reference implementation is
+Next-specific. Walk the user through the port instead of stopping:
+
+1. **Open `SPEC.md` from the kit** (`feedback-kit/SPEC.md`). It describes
+   the data model, wire format, client behavior, server validation, and
+   triage flow in stack-agnostic terms. §9 has sketches for common stacks
+   (Vite + React + FastAPI, Django, Rails, etc.). Read it before proposing
+   anything.
+2. **Inventory what the project gives you** — client framework + router
+   (so you know what to swap `usePathname()` for), backend framework +
+   ORM (so you know how to write the route + INSERT), session/auth shape,
+   DB dialect.
+3. **Propose a port plan.** Concretely: which files you'll create on the
+   server (route + model + migration), which on the client (the React
+   component still works almost verbatim if it's React; otherwise an
+   equivalent in the project's framework), and any constants from §7 of
+   the SPEC that need translation (e.g. column types for non-Postgres
+   DBs). **Pause for OK.**
+4. **Port file-by-file.** The client modules in `templates/feedback/` are
+   mostly pure React + DOM:
+   - `focus.ts`, `client.ts`, `types.ts`, `FeedbackRegion.tsx`,
+     `FeedbackButton.tsx` — all portable to any React app with minor swaps
+     (drop `next/navigation`, use the project's router hooks for the
+     pathname).
+   - `server.ts` — rewrite in the project's backend language; keep the
+     validation rules and INSERT shape per §5.2 of the SPEC.
+   - `schema.sql` — translate `jsonb` and `timestamptz` to the project's
+     DB types (§2 of the SPEC has the table for guidance).
+5. **Validate against the spec.** Once the port compiles, do a quick pass:
+   does each constant in §7 match? Does the wire format in §3 match? Does
+   the floating pill behave as in §4.1?
+6. **Apply DDL + smoke-test + summarize**, same as the Next path.
+
+The point is the row that lands in `feedback` should be byte-identical
+between a Next consumer and a ported consumer. That's what makes
+cross-project triage work.
+
 ## Anti-patterns
 - **Don't fork the module to "fit" the project.** If auth has the wrong shape,
   write an adapter at the route level. The whole point is that future updates
@@ -125,3 +167,5 @@ so this skill is mostly about *finding the right wires to plug it into*.
 - **Don't add screenshot capture, GitHub mirroring, or a dashboard in this
   install pass.** Those are deliberately deferred — see the module README for
   why. Suggest them as follow-ups if the user asks.
+- **Don't bail on non-Next projects.** Read `SPEC.md` and follow the port path
+  above. Only stop if the user explicitly says "skip it" after seeing the plan.

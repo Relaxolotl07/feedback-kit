@@ -25,6 +25,12 @@ and auto-captured path + page-registered JSON context → one row in a `feedback
 table in your project's Postgres. Built for vibe-coded side projects where a
 non-engineer should be able to flag issues without GitHub-Issue friction.
 
+**Different stack?** The widget's design is portable. The
+[`SPEC.md`](SPEC.md) at the root of this repo describes the data model, wire
+format, client behavior, and triage flow in architecture-agnostic terms — with
+sketches for FastAPI, Django, and Rails in §9. The `/feedback-widget` skill
+follows the port path automatically when it finds a non-Next.js project.
+
 ## Without Claude Code
 
 ```powershell
