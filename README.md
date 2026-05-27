@@ -9,14 +9,14 @@ git clone https://github.com/Relaxolotl07/feedback-kit && feedback-kit/install.s
 git clone https://github.com/Relaxolotl07/feedback-kit; .\feedback-kit\install.ps1 -Global
 ```
 
-Then in any Next.js + Postgres + session-auth project:
+Two skills land in `~/.claude/skills/`:
 
-```
-/feedback-widget
-```
-
-The skill audits the repo, copies the module, wires the API route to your real
-`sql` + auth helpers, mounts the button, and applies the dev DDL — interactively.
+- **`/feedback-widget`** — install the widget into the project you're in.
+  Audits the repo, copies the module, wires the API route to your real
+  `sql` + auth helpers, mounts the button, and applies the dev DDL.
+- **`/feedback`** — walk the open feedback queue. For each row, locate the
+  code from the captured pointer / cursor / region context, propose a fix,
+  apply it, commit, and mark the row resolved with the commit SHA.
 
 ## What you get
 

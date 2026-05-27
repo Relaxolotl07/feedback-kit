@@ -21,9 +21,13 @@ fi
 
 if [ "$GLOBAL" -eq 1 ]; then
   CLAUDE="$HOME/.claude"
-  echo "Installing global (inert) skill into $CLAUDE ..."
-  copy_if_absent "$KIT/claude/skills/feedback-widget/SKILL.md" "$CLAUDE/skills/feedback-widget/SKILL.md"
-  echo "Done. /feedback-widget available across repos (inert until invoked)."
+  echo "Installing global (inert) skills into $CLAUDE ..."
+  for dir in "$KIT"/claude/skills/*/; do
+    name="$(basename "$dir")"
+    src="${dir}SKILL.md"
+    [ -f "$src" ] && copy_if_absent "$src" "$CLAUDE/skills/$name/SKILL.md"
+  done
+  echo "Done. /feedback-widget + /feedback available across repos (inert until invoked)."
 fi
 
 if [ -n "$TARGET" ]; then

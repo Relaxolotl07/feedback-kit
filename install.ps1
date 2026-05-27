@@ -35,10 +35,14 @@ if (-not $Global -and -not $Target) {
 
 if ($Global) {
   $claude = Join-Path $HOME ".claude"
-  Write-Host "Installing global (inert) skill into $claude ..."
-  Copy-IfAbsent (Join-Path $kit "claude\skills\feedback-widget\SKILL.md") `
-                (Join-Path $claude "skills\feedback-widget\SKILL.md")
-  Write-Host "Done. /feedback-widget is available across repos (inert until invoked)."
+  Write-Host "Installing global (inert) skills into $claude ..."
+  Get-ChildItem (Join-Path $kit "claude\skills") -Directory | ForEach-Object {
+    $src = Join-Path $_.FullName "SKILL.md"
+    if (Test-Path $src) {
+      Copy-IfAbsent $src (Join-Path $claude "skills\$($_.Name)\SKILL.md")
+    }
+  }
+  Write-Host "Done. /feedback-widget + /feedback are available across repos (inert until invoked)."
 }
 
 if ($Target) {
