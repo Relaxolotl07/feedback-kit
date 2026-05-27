@@ -1,15 +1,56 @@
 ---
 name: feedback-widget
-description: Install the in-app feedback widget into a Next.js project. Copies a self-contained `feedback/` module (Radix Dialog + Postgres), generates the API route wired with the project's own sql + auth helpers, mounts the floating <FeedbackButton/>, and applies the schema. Use when a project wants non-engineers to send structured feedback (path + page context + comment + severity) from any authed page.
+description: Install the in-app feedback widget into a target project. For Next.js App Router + Postgres projects, copies the reference module verbatim and wires the API route + button. For any other stack (Vite + React + FastAPI, Django, Rails, etc.), follows the port path against SPEC.md so the row that lands in `feedback` is byte-identical to the reference. Use when a project wants non-engineers to send structured feedback (path + page context + comment + severity + passive focus + clicked pointers) from any authed page.
 ---
 
 # Install the feedback widget
 
-Goal: drop the portable `feedback/` module into a target Next.js (App Router)
-project, wire it to that project's existing `sql` client and auth helper, mount
-the floating button globally, and apply the schema. End state: an authed user
-sees a "Feedback" pill on every page; submitting writes one row to a `feedback`
-table in the project's Postgres.
+Goal: stand up the widget in a target project — either by dropping the
+reference module in (Next.js App Router) or by porting against `SPEC.md`
+(anything else). End state: an authed user sees a "Feedback" pill on every
+page; submitting writes one row to a `feedback` table whose shape matches
+the spec **exactly** so cross-project triage via `/feedback` continues to work.
+
+## Find the kit on disk before doing anything
+
+The kit globally installs only this `SKILL.md` to `~/.claude/skills/feedback-widget/`.
+The actual templates, SPEC, and helper scripts live in the kit repo on disk.
+**You need that repo open to do the install properly.**
+
+Look in (in order):
+1. `~/Documents/GitHub/feedback-kit/` (default Windows GitHub Desktop / `gh repo clone` location)
+2. `~/code/feedback-kit/`, `~/src/feedback-kit/`, `~/repos/feedback-kit/` (common Unix patterns)
+3. Current working directory (in case it's a monorepo with the kit alongside)
+4. If nowhere on disk: `git clone https://github.com/Relaxolotl07/feedback-kit /tmp/feedback-kit`
+   (or any scratch path) and read from there.
+
+Once found, the canonical files are:
+- `<kit>/SPEC.md` — architecture-agnostic source of truth. **Read this first.**
+- `<kit>/templates/feedback/` — the reference Next.js+Postgres module.
+  Copy verbatim for Next projects; use as a porting template otherwise.
+- `<kit>/scripts/apply-feedback-schema.mjs` — DDL helper.
+
+## Parity constraints (non-negotiable across all ports)
+
+Regardless of stack, these must match `SPEC.md` exactly — they're what
+makes one `/feedback` skill able to triage across every consumer project:
+
+- **Severity values are exactly `nice`, `bug`, `blocker`** (lowercase, no
+  synonyms — *not* `minor/major/blocker`, *not* `low/med/high`).
+- **The row carries `focus` and `pointers` columns** (jsonb on Postgres,
+  JSON on SQLite). Don't ship a v1-style "comment + severity + page_context"
+  port — it omits the whole reason DOM-pointer + passive capture exists,
+  and rows from your project won't be locatable by the `/feedback` skill.
+- **Wire format is camelCase** at the network boundary (per SPEC §3):
+  `pagePath`, `pageQuery`, `pageContext`, etc. Server may snake_case to
+  columns internally.
+- **Submitter email comes from the session, never the payload.**
+- **Constants from SPEC §7** (max comment 4000, max pointers 20,
+  recentClicks ring buffer 5 in 60s, consoleErrors 20 in 30s, intersection
+  threshold 0.4, selector depth ≤5).
+
+If you find yourself dropping any of the above to "fit the project", stop
+and surface it — the answer is an adapter, not a smaller spec.
 
 The module is project-agnostic — it never imports anything from the host app —
 so this skill is mostly about *finding the right wires to plug it into*.
@@ -111,24 +152,36 @@ so this skill is mostly about *finding the right wires to plug it into*.
    follow-up.
 
 ## Done when
-- `src/feedback/` exists in the target with the module verbatim from
-  `templates/feedback/`.
-- `src/app/api/feedback/route.ts` imports the project's actual `sql` + auth
-  and calls `createFeedbackPOST`.
-- `<FeedbackButton/>` is mounted globally and renders on non-`/auth/*` pages.
-- DDL is applied to the dev DB; production DDL handoff is queued.
-- `tsc --noEmit` is clean.
+
+Regardless of which path you took:
+
+- A `feedback` table exists in the dev DB with the columns from SPEC §2:
+  at minimum `id, created_at, submitter_email, project, page_path,
+  page_query, page_context, comment, severity, focus, pointers, status`,
+  plus the resolution fields. Production DDL handoff is queued.
+- An API endpoint accepts the SPEC §3 wire format (camelCase fields,
+  optional `focus` + `pointers`, max-20 pointers, comment 1-4000 chars).
+- A floating "Feedback" pill renders on every authed page (SPEC §4.1).
+- The modal includes severity radios (`nice|bug|blocker`), textarea,
+  "Point at it" CTA + chips, captured-context disclosure (SPEC §4.2).
+- Submitting writes a row whose severity, focus, and pointers values match
+  the spec exactly. Probe: SELECT a test row and confirm it parses against
+  the same shape that `<kit>/templates/feedback/types.ts` describes.
+- The project's type-checker / linter is clean (`tsc --noEmit`, `mypy`,
+  `ruff`, whatever applies).
 
 ## Port path (project isn't Next.js App Router)
 
 The widget's *design* is portable — only the reference implementation is
 Next-specific. Walk the user through the port instead of stopping:
 
-1. **Open `SPEC.md` from the kit** (`feedback-kit/SPEC.md`). It describes
-   the data model, wire format, client behavior, server validation, and
-   triage flow in stack-agnostic terms. §9 has sketches for common stacks
-   (Vite + React + FastAPI, Django, Rails, etc.). Read it before proposing
-   anything.
+1. **Open `SPEC.md` from the kit on disk** (resolve `<kit>` per the "Find
+   the kit on disk" section above — *don't* assume it's empty just because
+   `~/.claude/skills/feedback-widget/` only contains this SKILL.md; the kit
+   repo is somewhere else on the filesystem). The spec describes the data
+   model, wire format, client behavior, server validation, and triage flow
+   in stack-agnostic terms. §9 has sketches for common stacks (Vite +
+   React + FastAPI, Django, Rails, etc.). Read it before proposing anything.
 2. **Inventory what the project gives you** — client framework + router
    (so you know what to swap `usePathname()` for), backend framework +
    ORM (so you know how to write the route + INSERT), session/auth shape,
