@@ -294,10 +294,19 @@ function PointerSection({
       <button
         type="button"
         onClick={onStartPointer}
-        className="inline-flex items-center gap-1.5 self-start rounded-md border border-dashed border-line px-2 py-1 text-[11px] font-medium text-text-muted hover:text-text-primary hover:border-text-muted transition-colors"
+        className="group flex w-full items-center justify-center gap-2 rounded-md border border-line bg-surface-card-hover px-3 py-2.5 text-sm font-medium text-text-primary hover:border-text-primary hover:bg-text-primary hover:text-surface transition-colors"
       >
-        <MousePointerClick className="size-3.5" />
-        {pinned.length === 0 ? "Point at it" : "Point at another"}
+        <MousePointerClick className="size-4" />
+        {pinned.length === 0 ? (
+          <span>
+            Point at something on the page
+            <span className="ml-1.5 text-[11px] font-normal text-text-muted group-hover:text-surface/80">
+              (recommended)
+            </span>
+          </span>
+        ) : (
+          "Point at another"
+        )}
       </button>
     </div>
   );
