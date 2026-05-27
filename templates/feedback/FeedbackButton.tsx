@@ -10,8 +10,8 @@
  * library.
  */
 
-import { useEffect, useMemo, useState } from "react";
-import { usePathname, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import * as Dialog from "@radix-ui/react-dialog";
 import { MessageSquare, X } from "lucide-react";
 
@@ -28,14 +28,14 @@ type SubmitState = { kind: "idle" } | { kind: "saving" } | { kind: "ok"; id: num
 
 export function FeedbackButton() {
   const pathname = usePathname() ?? "";
-  const searchParams = useSearchParams();
-  const pageQuery = useMemo(() => {
-    const s = searchParams?.toString() ?? "";
-    return s ? `?${s}` : "";
-  }, [searchParams]);
 
   // Hide on /auth/* — those pages are pre-session.
   if (pathname.startsWith("/auth")) return null;
+
+  // Read the query string at click-time (inside FeedbackForm) instead of via
+  // `useSearchParams()`. The hook requires a Suspense boundary for static
+  // prerender (Next 16's /_not-found page in particular), which would make the
+  // module less drop-in. `window.location.search` inside an effect is fine.
 
   return (
     <Dialog.Root>
@@ -51,21 +51,26 @@ export function FeedbackButton() {
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm data-[state=open]:animate-in data-[state=open]:fade-in-0" />
         <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-[92vw] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg border border-line bg-surface p-5 shadow-2xl focus:outline-none">
-          <FeedbackForm pagePath={pathname} pageQuery={pageQuery} />
+          <FeedbackForm pagePath={pathname} />
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>
   );
 }
 
-function FeedbackForm({ pagePath, pageQuery }: { pagePath: string; pageQuery: string }) {
+function FeedbackForm({ pagePath }: { pagePath: string }) {
   const [comment, setComment] = useState("");
   const [severity, setSeverity] = useState<FeedbackSeverity>("nice");
   const [state, setState] = useState<SubmitState>({ kind: "idle" });
 
-  // Snapshot the page context at the moment the modal mounts — gives a stable
-  // payload even if the user starts navigating around in the background.
-  const pageContext = useMemo(() => readFeedbackContext() ?? {}, []);
+  // Snapshot path-side data once at modal mount — gives a stable payload even
+  // if the user starts navigating in the background. window.location is read in
+  // a lazy state initializer rather than via useSearchParams() so the module
+  // doesn't require a Suspense boundary in the host shell.
+  const [pageQuery] = useState(() =>
+    typeof window !== "undefined" ? window.location.search : "",
+  );
+  const [pageContext] = useState(() => readFeedbackContext() ?? {});
   const contextKeys = Object.keys(pageContext);
 
   // Auto-focus the textarea when the modal opens.
