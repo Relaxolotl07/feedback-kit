@@ -177,7 +177,7 @@ export function snapshotFocus(): FocusSnapshot {
     cursorTarget: cursorEl ? summarize(cursorEl) : null,
     textSelection: window.getSelection()?.toString().trim().slice(0, 500) || null,
     recentClicks: recentClicks.map((r) => ({
-      ...({ tag: r.tag, text: r.text, selector: r.selector, ariaLabel: r.ariaLabel, role: r.role, rect: r.rect }),
+      ...({ tag: r.tag, text: r.text, selector: r.selector, ariaLabel: r.ariaLabel, role: r.role, rect: r.rect, data: r.data }),
       at: now - r.absAt, // ms ago, positive
     })),
     visibleRegions: [...new Set(visibleRegions.values())],
