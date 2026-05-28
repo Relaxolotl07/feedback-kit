@@ -2,11 +2,31 @@
 
 ## Add it
 
+Clone to the canonical path so the `/feedback-widget` skill finds the kit on
+disk without searching:
+
 ```bash
-git clone https://github.com/Relaxolotl07/feedback-kit && feedback-kit/install.sh --global
+mkdir -p ~/Documents/GitHub && \
+  git clone https://github.com/Relaxolotl07/feedback-kit ~/Documents/GitHub/feedback-kit && \
+  ~/Documents/GitHub/feedback-kit/install.sh --global
 ```
 ```powershell
-git clone https://github.com/Relaxolotl07/feedback-kit; .\feedback-kit\install.ps1 -Global
+mkdir "$HOME\Documents\GitHub" -Force | Out-Null; `
+  git clone https://github.com/Relaxolotl07/feedback-kit "$HOME\Documents\GitHub\feedback-kit"; `
+  & "$HOME\Documents\GitHub\feedback-kit\install.ps1" -Global
+```
+
+## Update
+
+The skill resolves the kit on disk every time it runs, so a `git pull` is
+enough to pick up new templates / SPEC changes. Re-run `--global --force`
+when the SKILL.md files themselves change (e.g. a new procedure step):
+
+```bash
+cd ~/Documents/GitHub/feedback-kit && git pull && ./install.sh --global --force
+```
+```powershell
+cd "$HOME\Documents\GitHub\feedback-kit"; git pull; .\install.ps1 -Global -Force
 ```
 
 Two skills land in `~/.claude/skills/`:
