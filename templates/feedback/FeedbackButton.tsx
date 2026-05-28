@@ -75,7 +75,11 @@ export function FeedbackButton() {
 
       <Dialog.Root open={open && !pointerMode} onOpenChange={setOpen}>
         <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm data-[state=open]:animate-in data-[state=open]:fade-in-0" />
+          {/* No backdrop-blur — the GPU blur re-runs every paint while the
+              modal is open, and on a dense dashboard underneath that drove
+              full-system lag during typing/cursor movement. A slightly
+              denser dim (bg-black/65) reads the same and is free. */}
+          <Dialog.Overlay className="fixed inset-0 z-50 bg-black/65 data-[state=open]:animate-in data-[state=open]:fade-in-0" />
           <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-[92vw] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg border border-line bg-surface p-5 shadow-2xl focus:outline-none max-h-[85vh] overflow-y-auto">
             <FeedbackForm
               pagePath={pathname}
