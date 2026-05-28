@@ -58,8 +58,13 @@ page state) that most rows are locatable in code in under a minute.
 3. **For each row, work through it:**
    - **Locate the code.** Use the captured signals — in this order of
      specificity:
+     - `pointers[].data` and `focus.cursorTarget.data` → the most actionable
+       signal when present. Domain identity ridden along from the
+       `data-feedback-*` attrs at click time (SPEC §4.7). If the pin carries
+       `{ entityId: 42, ticker: "AAPL", score: 73 }`, you already know the
+       row's referent without grepping.
      - `pointers[].outerHTML` and `pointers[].text` → grep `src/` literally
-       (most precise — the user clicked exactly this element).
+       (precise — the user clicked exactly this element).
      - `focus.cursorTarget.text` → same (the user was hovering this).
      - `focus.textSelection` → if they selected text, it's gold; grep for it.
      - `pointers[].selector` → extract the deepest tag, grep that.
@@ -76,6 +81,18 @@ page state) that most rows are locatable in code in under a minute.
      the subject. Body: quote the user's comment + a sentence on the change.
      Don't add a `Co-Authored-By: Claude` trailer unless the project's
      conventions explicitly want one.
+   - **Adaptive-context check.** If you reached this row and the captured
+     signals were *not* enough to pin the referent (no entity id in
+     `pointers[].data`, no useful `text`, only a generic selector like
+     `div > div > svg`), the fix isn't only the code change — it's also a
+     missing annotation on the component that rendered the click target.
+     Add the appropriate `data-feedback-*` attrs (or a `useFeedbackContext`
+     at the page level if the state is page-global) and bundle them into
+     the same commit, or a tiny preparatory commit immediately before. The
+     point is the **next** submission from the same surface arrives with
+     the context this row was missing. Note the addition in the resolution
+     summary so the user sees the contract growing.
+
    - **Mark the row resolved.** Immediately after the commit lands:
      ```sql
      UPDATE feedback SET

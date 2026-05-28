@@ -27,6 +27,17 @@ export interface ElementSummary {
   ariaLabel: string | null;
   role: string | null;
   rect: { x: number; y: number; w: number; h: number };
+  /**
+   * Per-element domain context, harvested from `data-feedback-*` attributes
+   * on the element and (up to 5 levels of) its ancestors at capture time.
+   * Keys are camelCased from the original kebab attribute name
+   * (`data-feedback-entity-id` → `entityId`). Closer-to-the-target wins.
+   * Empty object when no annotations are present.
+   *
+   * Consumers annotate their DOM ergonomically via the `feedbackData()`
+   * spread helper from `./client` — see SPEC §4.7.
+   */
+  data: Record<string, string>;
 }
 
 export interface ClickRecord extends ElementSummary {
@@ -185,16 +196,42 @@ export function summarizeForPointer(el: Element): ElementSummary {
 function summarize(el: Element): ElementSummary {
   const rect = el.getBoundingClientRect();
   const text = (el.textContent ?? "").trim().replace(/\s+/g, " ").slice(0, 120);
-  const ariaLabel = el.getAttribute("aria-label");
-  const role = el.getAttribute("role");
   return {
     tag: el.tagName,
     text,
     selector: getSelector(el),
-    ariaLabel,
-    role,
+    ariaLabel: el.getAttribute("aria-label"),
+    role: el.getAttribute("role"),
     rect: { x: Math.round(rect.x), y: Math.round(rect.y), w: Math.round(rect.width), h: Math.round(rect.height) },
+    data: collectFeedbackData(el),
   };
+}
+
+const DATA_ATTR_PREFIX = "data-feedback-";
+const DATA_WALK_MAX_DEPTH = 5;
+
+/**
+ * Walk the element + up to 5 ancestors collecting `data-feedback-*`
+ * attributes into `{ camelCaseKey: value }`. Closer-to-the-target wins:
+ * a more-specific `data-feedback-ticker` on a `<td>` overrides a row-level
+ * one on the enclosing `<tr>`. Stops at `<body>`.
+ */
+function collectFeedbackData(el: Element): Record<string, string> {
+  const result: Record<string, string> = {};
+  let cur: Element | null = el;
+  let depth = 0;
+  while (cur && cur !== document.body && cur.nodeType === 1 && depth < DATA_WALK_MAX_DEPTH) {
+    for (const attr of cur.attributes) {
+      if (!attr.name.startsWith(DATA_ATTR_PREFIX)) continue;
+      const kebab = attr.name.slice(DATA_ATTR_PREFIX.length);
+      if (!kebab) continue;
+      const key = kebab.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+      if (!(key in result)) result[key] = attr.value;
+    }
+    cur = cur.parentElement;
+    depth++;
+  }
+  return result;
 }
 
 /**

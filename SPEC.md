@@ -96,6 +96,7 @@ interface ElementSummary {
   ariaLabel: string | null;
   role:      string | null;
   rect:      { x: number; y: number; w: number; h: number }; // viewport coords, integers
+  data:      Record<string, string>;     // per-element domain context, see §4.7
 }
 ```
 
@@ -211,6 +212,51 @@ at mount time. Any JSON-serializable value works. The reviewer sees this
 as `page_context` — useful for things like "which book was selected" or
 "what date range was active" that aren't in the URL.
 
+### 4.7 Per-element context
+
+Page context (§4.6) is global to the page. A table with twenty rows needs
+something **per element** — when the user pins one row's momentum cell,
+the row's identity (entity id, ticker, current value) should ride along
+with that specific pin, not the page as a whole.
+
+The convention is **`data-feedback-*` attributes** on the DOM:
+
+```tsx
+<tr {...feedbackData({ entityId: 42, ticker: "AAPL", momentumScore: 73 })}>
+  <td><MomentumCell score={73} /></td>
+</tr>
+```
+
+At pin time (and at every cursor-target capture), the widget walks the
+element + up to five ancestors and harvests every `data-feedback-*` attr
+into `ElementSummary.data`:
+
+- Keys are camelCased from the kebab attribute name
+  (`data-feedback-entity-id` → `entityId`).
+- Values are always strings on the wire — coerce in the consumer's
+  triage tooling if numeric semantics matter.
+- Closer-to-the-target wins: a `data-feedback-ticker` on a `<td>`
+  overrides one on the enclosing `<tr>`. Annotate at the broadest
+  appropriate level (usually the row) and add overrides only where the
+  row-level value isn't right.
+- Empty object when no annotations exist on the click path. Existing
+  consumers that never annotate keep working unchanged.
+
+**Where to annotate** (host-app guidance, not a wire-format rule):
+- **Row elements** in tables/lists keyed on a domain entity — entity id,
+  primary identifier (ticker / symbol / cusip), the displayed value the
+  user is reacting to (score, weight, status).
+- **Cell elements** with computed/derived values where the cell's value
+  differs from the row's value (a date-range cell can override the row's
+  global state, for example).
+- **Panel root elements** for self-contained widgets that have selectable
+  state — although for genuinely page-global state (active tab, selected
+  ticker), `useFeedbackContext` at the page level is the right tool.
+
+**Helper.** Use the `feedbackData()` spread helper exported from the
+module to avoid hand-rolling attribute strings. Null/undefined values are
+dropped so optional fields stay clean.
+
 ## 5. Server behavior
 
 ### 5.1 Auth
@@ -300,6 +346,7 @@ These numbers matter for behavior parity — keep them when porting:
 | Max pointers per submission           | 20        |
 | IntersectionObserver threshold        | 0.4       |
 | selector max depth                    | 5         |
+| data-feedback-* ancestor walk depth   | 5         |
 
 ## 8. Out of scope (deliberately)
 

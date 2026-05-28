@@ -140,16 +140,57 @@ so this skill is mostly about *finding the right wires to plug it into*.
    before the first deploy. *Do not* run prod DDL on the user's behalf without
    explicit confirmation in chat.
 
-6. **(Optional) Register page context on one page.** Pick a high-value page
-   (e.g. a dashboard with date pickers, a back-test tool with selected book) and
-   add `useFeedbackContext({ ... })` to demonstrate the pattern. Cite the
-   module's README for how other pages can opt in.
+6. **Survey for click context — required pass.** Walk the host project's
+   frontend and identify the surfaces where reviewers will likely receive
+   feedback. For each, add the context the row will need to be acted on:
+
+   - **`data-feedback-*` attrs (per-element)** — for tables / lists / grids
+     keyed on a domain entity. Annotate the **row** with the entity's
+     identity (id, primary identifier) and the displayed value the user is
+     reacting to (score, weight, status). Use the `feedbackData({...})`
+     spread helper from `./client`:
+
+     ```tsx
+     import { feedbackData } from "@/feedback/client";
+
+     <tr {...feedbackData({ entityId: e.id, ticker: e.ticker, score: e.score })}>
+       <td><MomentumCell score={e.score} /></td>
+       ...
+     </tr>
+     ```
+
+     The widget walks the clicked element + 5 ancestors at pin time and
+     harvests every `data-feedback-*` attr into the pointer's `data` field
+     (SPEC §3, §4.7). Reviewer sees `entityId=42, ticker=AAPL, score=73`
+     next to the pin — no reverse-engineering. Closer-to-target wins, so a
+     row-level annotation is the right default and per-cell overrides work
+     when needed.
+
+   - **`useFeedbackContext({...})` (per-page)** — for genuinely page-global
+     state that doesn't belong on any single element (the active tab, the
+     selected book, the date range). Mount in the page component so the
+     singleton updates on each render.
+
+   - **`<FeedbackRegion name="...">` (per-section)** — for named panels
+     that should appear in `focus.visibleRegions` when ≥40% of the section
+     is on screen. Cheap insurance when several panels share a page.
+
+   **Heuristic for what to annotate**: rows/cells/items that represent a
+   domain entity (anything with a stable id), computed values the user is
+   likely to react to (scores, ratings, status badges), and panels with
+   their own selectable state. If a row landing in `feedback` would need
+   the reviewer to grep the codebase to figure out *which entity*, you
+   missed an annotation.
+
+   **Pause and list the annotated surfaces** in the proposed plan before
+   editing. Surface the heuristic decisions so the user can flag misses.
 
 7. **Verify + summarize.** Confirm types compile (`tsc --noEmit` if the project
    uses TS). Summarize: what was created, where the button lives, what
-   page-context fields were registered, and the production-DDL step the user
-   still needs to do. Optionally suggest a `/admin/feedback` dashboard as a
-   follow-up.
+   page-context fields were registered, **which surfaces got
+   `data-feedback-*` annotations** (so the triage skill knows what context
+   to expect), and the production-DDL step the user still needs to do.
+   Optionally suggest a `/admin/feedback` dashboard as a follow-up.
 
 ## Done when
 
